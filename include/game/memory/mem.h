@@ -19,6 +19,7 @@ inline std::uintptr_t addr(std::uintptr_t rva) {
 }
 
 inline std::uintptr_t add(void* p, std::uintptr_t off) {
+    if (!p || off == 0) return 0;
     return reinterpret_cast<std::uintptr_t>(p) + off;
 }
 

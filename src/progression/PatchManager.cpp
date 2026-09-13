@@ -9,16 +9,11 @@ PatchManager::~PatchManager() {
 }
 
 void PatchManager::ApplyPatches(bool include_plants, bool include_dyes) {
+    // Wax/candle AOB signatures are intentionally not scanned on 0.34.5.
     ApplyWaxPatches();
     ApplyCandlePatches();
-
-    if (include_plants) {
-        ApplyPlantPatches();
-    }
-
-    if (include_dyes) {
-        ApplyDyePatches();
-    }
+    if (include_plants) ApplyPlantPatches();
+    if (include_dyes) ApplyDyePatches();
 }
 
 void PatchManager::RestoreAllPatches() {
@@ -33,50 +28,20 @@ bool PatchManager::ArePatchesApplied() const {
 }
 
 void PatchManager::ApplyWaxPatches() {
-    using namespace tsm::game::Signatures;
-    if (wax_applied_) return;
-
-    if (tsm::game::memory::GetBase() == 0) {
-        tsm::game::memory::InitializeBase();
-    }
-
+    // Legacy kAutoCollectWaxPattern was not independently verified against 0.34.5.
     wax_patches_.clear();
-    if (tsm::game::memory::CreateNopPatchesForPattern(kAutoCollectWaxPattern, wax_patches_, 1) > 0) {
-        for (auto& patch : wax_patches_) {
-            if (!patch.applied) {
-                patch.Apply();
-            }
-        }
-        wax_applied_ = true;
-    }
+    wax_applied_ = false;
 }
 
 void PatchManager::ApplyCandlePatches() {
-    using namespace tsm::game::Signatures;
-    if (candles_applied_) return;
-
-    if (tsm::game::memory::GetBase() == 0) {
-        tsm::game::memory::InitializeBase();
-    }
-
+    // Legacy kAutoBurnCandlesPattern was not independently verified against 0.34.5.
     candle_patches_.clear();
-    if (tsm::game::memory::CreateNopPatchesForPattern(kAutoBurnCandlesPattern, candle_patches_, 2) > 0) {
-        for (auto& patch : candle_patches_) {
-            if (!patch.applied) {
-                patch.Apply();
-            }
-        }
-        candles_applied_ = true;
-    }
+    candles_applied_ = false;
 }
 
 void PatchManager::ApplyPlantPatches() {
     if (plants_applied_) return;
-
-    if (tsm::game::memory::GetBase() == 0) {
-        tsm::game::memory::InitializeBase();
-    }
-
+    if (tsm::game::memory::GetBase() == 0) tsm::game::memory::InitializeBase();
     plant_patches_.clear();
 
     const std::uint8_t kToInstr[4] = { 0xE0, 0x03, 0x27, 0x1E };
@@ -89,31 +54,19 @@ void PatchManager::ApplyPlantPatches() {
     for (std::uintptr_t rva : kTargets) {
         void* target = tsm::game::memory::RvaToPtr(rva);
         if (!target) continue;
-
         std::uint32_t cur = *reinterpret_cast<std::uint32_t*>(target);
         if (cur == 0xBD424940u || cur == 0xBD424920u) {
             plant_patches_.emplace_back(tsm::game::memory::CreatePatch(target, kToInstr, 4));
         }
     }
 
-    for (auto& patch : plant_patches_) {
-        if (!patch.applied) {
-            patch.Apply();
-        }
-    }
-
-    if (!plant_patches_.empty()) {
-        plants_applied_ = true;
-    }
+    for (auto& patch : plant_patches_) if (!patch.applied) patch.Apply();
+    plants_applied_ = !plant_patches_.empty();
 }
 
 void PatchManager::ApplyDyePatches() {
     if (dyes_applied_) return;
-
-    if (tsm::game::memory::GetBase() == 0) {
-        tsm::game::memory::InitializeBase();
-    }
-
+    if (tsm::game::memory::GetBase() == 0) tsm::game::memory::InitializeBase();
     dye_patches_.clear();
 
     const std::uint8_t kToInstr[4] = { 0xE0, 0x03, 0x27, 0x1E };
@@ -126,65 +79,37 @@ void PatchManager::ApplyDyePatches() {
     for (std::uintptr_t rva : kTargets) {
         void* target = tsm::game::memory::RvaToPtr(rva);
         if (!target) continue;
-
         std::uint32_t cur = *reinterpret_cast<std::uint32_t*>(target);
         if (cur == 0xBD424940u || cur == 0xBD424920u) {
             dye_patches_.emplace_back(tsm::game::memory::CreatePatch(target, kToInstr, 4));
         }
     }
 
-    for (auto& patch : dye_patches_) {
-        if (!patch.applied) {
-            patch.Apply();
-        }
-    }
-
-    if (!dye_patches_.empty()) {
-        dyes_applied_ = true;
-    }
+    for (auto& patch : dye_patches_) if (!patch.applied) patch.Apply();
+    dyes_applied_ = !dye_patches_.empty();
 }
 
 void PatchManager::RestoreWaxPatches() {
-    if (!wax_applied_) return;
-
-    for (auto& patch : wax_patches_) {
-        if (patch.address && patch.applied) {
-            patch.Restore();
-        }
-    }
+    for (auto& patch : wax_patches_) if (patch.address && patch.applied) patch.Restore();
+    wax_patches_.clear();
     wax_applied_ = false;
 }
 
 void PatchManager::RestoreCandlePatches() {
-    if (!candles_applied_) return;
-
-    for (auto& patch : candle_patches_) {
-        if (patch.address && patch.applied) {
-            patch.Restore();
-        }
-    }
+    for (auto& patch : candle_patches_) if (patch.address && patch.applied) patch.Restore();
+    candle_patches_.clear();
     candles_applied_ = false;
 }
 
 void PatchManager::RestorePlantPatches() {
-    if (!plants_applied_) return;
-
-    for (auto& patch : plant_patches_) {
-        if (patch.address && patch.applied) {
-            patch.Restore();
-        }
-    }
+    for (auto& patch : plant_patches_) if (patch.address && patch.applied) patch.Restore();
+    plant_patches_.clear();
     plants_applied_ = false;
 }
 
 void PatchManager::RestoreDyePatches() {
-    if (!dyes_applied_) return;
-
-    for (auto& patch : dye_patches_) {
-        if (patch.address && patch.applied) {
-            patch.Restore();
-        }
-    }
+    for (auto& patch : dye_patches_) if (patch.address && patch.applied) patch.Restore();
+    dye_patches_.clear();
     dyes_applied_ = false;
 }
 

@@ -5,7 +5,6 @@ on:
   push:
     branches:
       - master
-      - tsm-0.34.5-final
 
 permissions:
   contents: write
@@ -136,9 +135,10 @@ jobs:
           fail_on_unmatched_files: true
           body: |
             - Updated for Sky 0.34.5.
-            - Restored the Lua command queue on a REMCP/Ghidra-verified LocalAvatarLoco game-thread hook.
-            - Added Canvas `offsetsUrl` support with safe runtime overrides and compiled verified defaults.
-            - Unverified native hooks/patches remain explicitly fail-closed until a 0.34.5 address is independently verified.
+            - REMCP/Ghidra-verified core offsets only; unverified globals/layouts/hooks/patches are fail-closed.
+            - Restored the Lua command queue on the verified 9-argument LocalAvatarLoco game-thread hook.
+            - Canvas runtime overrides are restricted to the independently verified 0.34.5 whitelist.
+            - Legacy wax/candle AOB scanner paths are disabled until independently re-verified.
             - Developer: XeTrinityz
             - Contributors: Catyro, Hinnli
           files: |

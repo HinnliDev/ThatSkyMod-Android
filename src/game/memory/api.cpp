@@ -16,7 +16,6 @@
 
 namespace tsm::game::api {
 
-
 [[nodiscard]] bool PlayerUuid::IsValid() const noexcept {
     for (int i = 0; i < 16; ++i) {
         if (bytes[i] != 0) return true;
@@ -36,44 +35,43 @@ namespace tsm::game::api {
     return std::string(buf);
 }
 
-
 namespace detail {
     std::array<std::uintptr_t, kMaxAvatars> s_avatarCache{};
     bool s_avatarCacheValid = false;
 }
 
 void InvalidateAvatarCache() noexcept {
+    detail::s_avatarCache.fill(0);
     detail::s_avatarCacheValid = false;
 }
 
 void RefreshAvatarCache() {
+    if (Offsets::kAvatarLocalSlot == 0 || Offsets::kAvatarSlotStride == 0) {
+        InvalidateAvatarCache();
+        return;
+    }
+
     auto barn = AvatarBarn();
     if (!barn) {
-        detail::s_avatarCacheValid = false;
+        InvalidateAvatarCache();
         return;
     }
 
     const std::uintptr_t barnAddr = reinterpret_cast<std::uintptr_t>(barn);
-
     for (int i = 0; i < kMaxAvatars; ++i) {
         detail::s_avatarCache[i] = barnAddr +
-            Offsets::kAvatarSlotStride * i +
+            Offsets::kAvatarSlotStride * static_cast<std::uintptr_t>(i) +
             Offsets::kAvatarLocalSlot;
     }
-
     detail::s_avatarCacheValid = true;
 }
 
 [[nodiscard]] std::uintptr_t GetCachedAvatar(int index) {
     if (index < 0 || index >= kMaxAvatars) return 0;
-
-    if (!detail::s_avatarCacheValid) {
-        RefreshAvatarCache();
-    }
-
+    if (!detail::s_avatarCacheValid) RefreshAvatarCache();
+    if (!detail::s_avatarCacheValid) return 0;
     return detail::s_avatarCache[index];
 }
-
 
 [[nodiscard]] void* Game() {
     return mem::read_ptr_rva(Offsets::Game);
@@ -81,132 +79,116 @@ void RefreshAvatarCache() {
 
 [[nodiscard]] void* LuaState() {
     auto g = Game();
-    if (!g) return nullptr;
-    return *reinterpret_cast<void**>(mem::add(g, Offsets::kLuaState));
+    if (!g || Offsets::kLuaState == 0) return nullptr;
+    return mem::read_ptr_abs(mem::add(g, Offsets::kLuaState));
 }
 
 [[nodiscard]] void* AvatarBarn() {
     auto g = Game();
-    if (!g) return nullptr;
-    return *reinterpret_cast<void**>(mem::add(g, Offsets::kAvatarBarn));
+    if (!g || Offsets::kAvatarBarn == 0) return nullptr;
+    return mem::read_ptr_abs(mem::add(g, Offsets::kAvatarBarn));
 }
 
 [[nodiscard]] void* NetPlayerBarn() {
     auto g = Game();
-    if (!g) return nullptr;
+    if (!g || Offsets::kNetPlayerBarnPtr == 0 || Offsets::kNetPlayerBarnOffset == 0) return nullptr;
 
-    void* ptr = *reinterpret_cast<void**>(mem::add(g, Offsets::kNetPlayerBarnPtr));
+    void* ptr = mem::read_ptr_abs(mem::add(g, Offsets::kNetPlayerBarnPtr));
     if (!ptr) return nullptr;
-
-    return *reinterpret_cast<void**>(mem::add(ptr, Offsets::kNetPlayerBarnOffset));
+    return mem::read_ptr_abs(mem::add(ptr, Offsets::kNetPlayerBarnOffset));
 }
 
 [[nodiscard]] const char* LevelName() {
     auto g = Game();
-    if (!g) return nullptr;
-    return *reinterpret_cast<const char**>(mem::add(g, Offsets::kLevelName));
+    if (!g || Offsets::kLevelName == 0) return nullptr;
+    const std::uintptr_t address = mem::add(g, Offsets::kLevelName);
+    return address ? *reinterpret_cast<const char**>(address) : nullptr;
 }
 
-
 [[nodiscard]] void* LocalAvatar(int index) {
+    if (index < 0 || index >= kMaxAvatars || Offsets::kAvatarLocalSlot == 0 || Offsets::kAvatarSlotStride == 0) return nullptr;
     auto barn = AvatarBarn();
     if (!barn) return nullptr;
 
     const std::uintptr_t slot = Offsets::kAvatarLocalSlot +
         static_cast<std::uintptr_t>(index) * Offsets::kAvatarSlotStride;
-
-    return *reinterpret_cast<void**>(mem::add(barn, slot));
+    return mem::read_ptr_abs(mem::add(barn, slot));
 }
 
 [[nodiscard]] void* LocalAvatarOutfit(int index) {
+    if (index < 0 || index >= kMaxAvatars || Offsets::kAvatarLocalSlot == 0 ||
+        Offsets::kAvatarSlotStride == 0 || Offsets::kAvatarOutfit == 0) return nullptr;
     auto barn = AvatarBarn();
     if (!barn) return nullptr;
 
-    const std::uintptr_t offset =
-        static_cast<std::uintptr_t>(Offsets::kAvatarLocalSlot) +
+    const std::uintptr_t offset = Offsets::kAvatarLocalSlot +
         static_cast<std::uintptr_t>(index) * Offsets::kAvatarSlotStride +
-        static_cast<std::uintptr_t>(Offsets::kAvatarOutfit);
-
-    const std::uintptr_t fieldAddr = reinterpret_cast<std::uintptr_t>(barn) + offset;
-    const std::uintptr_t p = *reinterpret_cast<std::uintptr_t*>(fieldAddr);
-
-    return p ? reinterpret_cast<void*>(p) : nullptr;
+        Offsets::kAvatarOutfit;
+    return mem::read_ptr_abs(reinterpret_cast<std::uintptr_t>(barn) + offset);
 }
 
 [[nodiscard]] vec3 LocalAvatarPosition(int index) {
+    if (index < 0 || index >= kMaxAvatars || Offsets::kAvatarLocalSlot == 0 ||
+        Offsets::kAvatarSlotStride == 0 || Offsets::kAvatarPosition == 0) return vec3{0.0f, 0.0f, 0.0f};
     auto barn = AvatarBarn();
     if (!barn) return vec3{0.0f, 0.0f, 0.0f};
 
-    const std::uintptr_t offset =
-        static_cast<std::uintptr_t>(Offsets::kAvatarLocalSlot) +
+    const std::uintptr_t offset = Offsets::kAvatarLocalSlot +
         static_cast<std::uintptr_t>(index) * Offsets::kAvatarSlotStride +
-        static_cast<std::uintptr_t>(Offsets::kAvatarPosition);
-
-    const std::uintptr_t fieldAddr = reinterpret_cast<std::uintptr_t>(barn) + offset;
-    float* p = *reinterpret_cast<float**>(fieldAddr);
-
+        Offsets::kAvatarPosition;
+    float* p = *reinterpret_cast<float**>(reinterpret_cast<std::uintptr_t>(barn) + offset);
     if (!p) return vec3{0.0f, 0.0f, 0.0f};
     return vec3{p[0], p[1], p[2]};
 }
 
 [[nodiscard]] float LocalAvatarRotation(int index) {
+    if (index < 0 || index >= kMaxAvatars || Offsets::kAvatarLocalSlot == 0 ||
+        Offsets::kAvatarSlotStride == 0 || Offsets::kAvatarPosition == 0) return 0.0f;
     auto barn = AvatarBarn();
     if (!barn) return 0.0f;
 
-    const std::uintptr_t offset =
-        static_cast<std::uintptr_t>(Offsets::kAvatarLocalSlot) +
+    const std::uintptr_t offset = Offsets::kAvatarLocalSlot +
         static_cast<std::uintptr_t>(index) * Offsets::kAvatarSlotStride +
-        static_cast<std::uintptr_t>(Offsets::kAvatarPosition);
-
-    const std::uintptr_t fieldAddr = reinterpret_cast<std::uintptr_t>(barn) + offset;
-    float* p = *reinterpret_cast<float**>(fieldAddr);
-
-    if (!p) return 0.0f;
-    return p[8];
+        Offsets::kAvatarPosition;
+    float* p = *reinterpret_cast<float**>(reinterpret_cast<std::uintptr_t>(barn) + offset);
+    return p ? p[8] : 0.0f;
 }
 
 [[nodiscard]] float* LocalAvatarPositionRawPtr(int index) {
+    if (index < 0 || index >= kMaxAvatars || Offsets::kAvatarLocalSlot == 0 ||
+        Offsets::kAvatarSlotStride == 0 || Offsets::kAvatarPosition == 0) return nullptr;
     auto barn = AvatarBarn();
     if (!barn) return nullptr;
 
-    const std::uintptr_t offset =
-        static_cast<std::uintptr_t>(Offsets::kAvatarLocalSlot) +
+    const std::uintptr_t offset = Offsets::kAvatarLocalSlot +
         static_cast<std::uintptr_t>(index) * Offsets::kAvatarSlotStride +
-        static_cast<std::uintptr_t>(Offsets::kAvatarPosition);
-
-    const std::uintptr_t fieldAddr = reinterpret_cast<std::uintptr_t>(barn) + offset;
-    return *reinterpret_cast<float**>(fieldAddr);
+        Offsets::kAvatarPosition;
+    return *reinterpret_cast<float**>(reinterpret_cast<std::uintptr_t>(barn) + offset);
 }
 
 [[nodiscard]] bool ShouldDisplay(std::uintptr_t avatar) {
     if (avatar == 0 || Offsets::kShouldDisplay == 0 || tsm::game::memory::GetBase() == 0) return false;
-
     using ShouldDisplayFunc = bool(*)(std::uintptr_t);
-    const std::uintptr_t funcAddr = tsm::game::memory::GetBase() + Offsets::kShouldDisplay;
-    auto func = reinterpret_cast<ShouldDisplayFunc>(funcAddr);
-
+    auto func = reinterpret_cast<ShouldDisplayFunc>(tsm::game::memory::GetBase() + Offsets::kShouldDisplay);
     return func(avatar);
 }
 
 [[nodiscard]] AvatarInfo GetAvatarInfo(std::uintptr_t avatar) {
     AvatarInfo info{};
-    if (avatar == 0) return info;
+    if (avatar == 0 || Offsets::kAvatarOutfit == 0 || Offsets::kAvatarPosition == 0 || Offsets::kAvatarShout == 0) return info;
 
     try {
-        const std::uintptr_t outfitPtr =
-            *reinterpret_cast<std::uintptr_t*>(avatar + Offsets::kAvatarOutfit);
+        const std::uintptr_t outfitPtr = *reinterpret_cast<std::uintptr_t*>(avatar + Offsets::kAvatarOutfit);
+        const std::uintptr_t posPtr = *reinterpret_cast<std::uintptr_t*>(avatar + Offsets::kAvatarPosition);
+        if (posPtr != 0) info.avatarPosition = reinterpret_cast<vec3*>(posPtr);
+        info.avatarShout = *reinterpret_cast<std::uintptr_t*>(avatar + Offsets::kAvatarShout);
 
-        const std::uintptr_t posPtr =
-            *reinterpret_cast<std::uintptr_t*>(avatar + Offsets::kAvatarPosition);
-
-        if (posPtr != 0) {
-            info.avatarPosition = reinterpret_cast<vec3*>(posPtr);
-        }
-
-        info.avatarShout =
-            *reinterpret_cast<std::uintptr_t*>(avatar + Offsets::kAvatarShout);
-
-        if (outfitPtr != 0) {
+        const bool outfitLayoutVerified = Offsets::kHeight != 0 && Offsets::kScale != 0 &&
+            Offsets::kVoice != 0 && Offsets::kStance != 0 && Offsets::kHair != 0 &&
+            Offsets::kHat != 0 && Offsets::kMask != 0 && Offsets::kFace != 0 &&
+            Offsets::kNeck != 0 && Offsets::kBody != 0 && Offsets::kFeet != 0 &&
+            Offsets::kWing != 0 && Offsets::kProp != 0;
+        if (outfitPtr != 0 && outfitLayoutVerified) {
             info.avatarHeight = reinterpret_cast<float*>(outfitPtr + Offsets::kHeight);
             info.avatarScale = reinterpret_cast<float*>(outfitPtr + Offsets::kScale);
             info.avatarVoice = reinterpret_cast<std::uint8_t*>(outfitPtr + Offsets::kVoice);
@@ -221,88 +203,67 @@ void RefreshAvatarCache() {
             info.avatarWing = reinterpret_cast<const char*>(outfitPtr + Offsets::kWing);
             info.avatarProp = reinterpret_cast<const char*>(outfitPtr + Offsets::kProp);
         }
+    } catch (...) {
     }
-    catch (...) {
-    }
-
     return info;
 }
 
 [[nodiscard]] AvatarInfo GetAvatarInfoByIndex(int index) {
-    const std::uintptr_t avatar = GetCachedAvatar(index);
-    return GetAvatarInfo(avatar);
+    return GetAvatarInfo(GetCachedAvatar(index));
 }
 
-
 [[nodiscard]] int GetPlayerIdByIndex(int index) {
-    if (index < 0 || index >= kMaxAvatars) return 0;
-
+    if (index < 0 || index >= kMaxAvatars || Offsets::kFirstPlayerIdOffset == 0 || Offsets::kPlayerIdStride == 0) return 0;
     void* npb = NetPlayerBarn();
     if (!npb) return 0;
 
     const std::uintptr_t playerIdAddr = mem::add(npb,
-        Offsets::kFirstPlayerIdOffset + (Offsets::kPlayerIdStride * index));
-
-    return *reinterpret_cast<int*>(playerIdAddr);
+        Offsets::kFirstPlayerIdOffset + (Offsets::kPlayerIdStride * static_cast<std::uintptr_t>(index)));
+    return playerIdAddr ? *reinterpret_cast<int*>(playerIdAddr) : 0;
 }
 
-
 [[nodiscard]] float* GameSpeedDeltaPtr() {
+    if (Offsets::AudienceBarn == 0 || Offsets::kGameSpeedBarn == 0 || Offsets::kGameSpeedDelta == 0) return nullptr;
     void* pBarnLoc = tsm::game::memory::RvaToPtr(Offsets::AudienceBarn);
     if (!pBarnLoc) return nullptr;
-
     void* barn = *reinterpret_cast<void**>(pBarnLoc);
     if (!barn) return nullptr;
-
-    void* gs = *reinterpret_cast<void**>(
-        reinterpret_cast<char*>(barn) + Offsets::kGameSpeedBarn);
+    void* gs = mem::read_ptr_abs(mem::add(barn, Offsets::kGameSpeedBarn));
     if (!gs) return nullptr;
-
-    return reinterpret_cast<float*>(
-        reinterpret_cast<char*>(gs) + Offsets::kGameSpeedDelta);
+    const std::uintptr_t delta = mem::add(gs, Offsets::kGameSpeedDelta);
+    return delta ? reinterpret_cast<float*>(delta) : nullptr;
 }
 
 [[nodiscard]] float GameSpeed() {
-    if (float* p = GameSpeedDeltaPtr()) {
-        return *p;
-    }
+    if (float* p = GameSpeedDeltaPtr()) return *p;
     return 1.0f;
 }
 
 void SetGameSpeed(float speed) {
-    if (float* p = GameSpeedDeltaPtr()) {
-        tsm::game::memory::WriteBytes(p, &speed, sizeof(float));
-    }
+    if (float* p = GameSpeedDeltaPtr()) tsm::game::memory::WriteBytes(p, &speed, sizeof(float));
 }
 
-
 [[nodiscard]] std::uintptr_t CameraSystem() {
+    if (Offsets::AudienceBarn == 0 || Offsets::kCameraSystem == 0) return 0;
     void* pBarnLoc = tsm::game::memory::RvaToPtr(Offsets::AudienceBarn);
     if (!pBarnLoc) return 0;
-
     void* audience = *reinterpret_cast<void**>(pBarnLoc);
     if (!audience) return 0;
-
-    void* camSys = *reinterpret_cast<void**>(mem::add(audience, Offsets::kCameraSystem));
-    if (!camSys) return 0;
-
-    return reinterpret_cast<std::uintptr_t>(camSys);
+    return reinterpret_cast<std::uintptr_t>(mem::read_ptr_abs(mem::add(audience, Offsets::kCameraSystem)));
 }
 
 [[nodiscard]] std::uintptr_t WhiskerCamera() {
+    if (Offsets::kWhiskerCamera == 0) return 0;
     const std::uintptr_t camSys = CameraSystem();
-    if (camSys == 0) return 0;
-
-    return camSys + Offsets::kWhiskerCamera;
+    return camSys ? camSys + Offsets::kWhiskerCamera : 0;
 }
-
 
 namespace {
     void* GetCandleBarnInternal() {
+        if (Offsets::CandleBarn == 0) return nullptr;
         void* pBarnLoc = tsm::game::memory::RvaToPtr(Offsets::CandleBarn);
         if (!pBarnLoc) return nullptr;
-        void* barn = *reinterpret_cast<void**>(pBarnLoc);
-        return barn;
+        return *reinterpret_cast<void**>(pBarnLoc);
     }
 }
 
@@ -310,44 +271,35 @@ namespace {
     void* barn = GetCandleBarnInternal();
     if (!barn) return 0;
     int* pCount = reinterpret_cast<int*>(reinterpret_cast<char*>(barn) + 0x5A010);
-    if (!pCount) return 0;
     int count = *pCount;
-    if (count < 0) return 0;
-    return count;
+    return count < 0 ? 0 : count;
 }
 
 [[nodiscard]] std::uintptr_t FirstCandle() {
     void* barn = GetCandleBarnInternal();
-    if (!barn) return 0;
-    return reinterpret_cast<std::uintptr_t>(reinterpret_cast<char*>(barn) + 0x40);
+    return barn ? reinterpret_cast<std::uintptr_t>(reinterpret_cast<char*>(barn) + 0x40) : 0;
 }
 
 [[nodiscard]] int CandleTypeIndex(int index) {
     void* barn = GetCandleBarnInternal();
-    if (!barn) return -1;
-    if (index < 0) return -1;
+    if (!barn || index < 0) return -1;
     int count = CandleCount();
     if (index >= count) return -1;
     char* base = reinterpret_cast<char*>(barn);
     std::uintptr_t entryOffset = 0x1F810u + static_cast<std::uintptr_t>(index) * 0xD0u;
-    std::uint8_t* pType = reinterpret_cast<std::uint8_t*>(base + entryOffset + 0x9Cu);
-    if (!pType) return -1;
-    return static_cast<int>(*pType);
+    return static_cast<int>(*reinterpret_cast<std::uint8_t*>(base + entryOffset + 0x9Cu));
 }
 
 [[nodiscard]] bool CandleIsActive(int index) {
     void* barn = GetCandleBarnInternal();
-    if (!barn) return false;
-    if (index < 0) return false;
+    if (!barn || index < 0) return false;
     int count = CandleCount();
     if (index >= count) return false;
     char* base = reinterpret_cast<char*>(barn);
     std::uintptr_t entryOffset = 0x1F810u + static_cast<std::uintptr_t>(index) * 0xD0u;
-    char* entry = base + entryOffset;
-    void* node = *reinterpret_cast<void**>(entry + 0x90u);
+    void* node = *reinterpret_cast<void**>(base + entryOffset + 0x90u);
     if (!node) return false;
-    char* nodeBase = reinterpret_cast<char*>(node);
-    std::uint16_t flags = *reinterpret_cast<std::uint16_t*>(nodeBase + 97);
+    std::uint16_t flags = *reinterpret_cast<std::uint16_t*>(reinterpret_cast<char*>(node) + 97);
     return (flags & 0x30u) == 0x30u;
 }
 

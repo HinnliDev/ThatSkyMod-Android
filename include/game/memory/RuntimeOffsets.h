@@ -27,86 +27,19 @@ inline std::string CanvasOffsetsPath() {
     return path;
 }
 
+// Strict whitelist: only values independently verified for the target 0.34.5 image
+// can be overridden at runtime. Adding a key here requires REMCP verification first.
 inline std::unordered_map<std::string, std::uintptr_t*> KnownOffsets() {
     using namespace tsm::game::Offsets;
     return {
-        {"Game", &Game}, {"AudienceBarn", &AudienceBarn}, {"CandleBarn", &CandleBarn},
-        {"kLuaState", &kLuaState}, {"kGameInit", &kGameInit},
-        {"kSystemAccountsAndroid", &kSystemAccountsAndroid},
-        {"kAccountServerClient", &kAccountServerClient}, {"kAccountBarnGameField", &kAccountBarnGameField},
-        {"kControllerGameField", &kControllerGameField}, {"kWingBuffBarn", &kWingBuffBarn},
-        {"kCandleBarnField", &kCandleBarnField}, {"kTimelineBarn", &kTimelineBarn},
-        {"kEventBarn", &kEventBarn}, {"kDarkstoneBarn", &kDarkstoneBarn},
-        {"kRadianceBarnField", &kRadianceBarnField}, {"kDarkCreatureBarn", &kDarkCreatureBarn},
-        {"kFriendBarn", &kFriendBarn}, {"kFriendDataBarn", &kFriendDataBarn},
-        {"kAffinityBarn", &kAffinityBarn}, {"kPickupEmitterBarn", &kPickupEmitterBarn},
-        {"kPickupBarn", &kPickupBarn}, {"kWaxChunkBarn", &kWaxChunkBarn},
-        {"kPickupNodeBarn", &kPickupNodeBarn}, {"kMusicBarn", &kMusicBarn},
-        {"kSheetMusicBarn", &kSheetMusicBarn}, {"kLevelStateBarn", &kLevelStateBarn},
-        {"kGameMode", &kGameMode}, {"kServerHostname", &kServerHostname},
-        {"kAvatarBarn", &kAvatarBarn}, {"kNetPlayerBarnPtr", &kNetPlayerBarnPtr},
-        {"kNetPlayerBarnOffset", &kNetPlayerBarnOffset}, {"kFirstPlayerIdOffset", &kFirstPlayerIdOffset},
-        {"kFirstPlayerUuidOffset", &kFirstPlayerUuidOffset}, {"kPlayerIdStride", &kPlayerIdStride},
-        {"kAccountBarn", &kAccountBarn}, {"kAvatarOutfit", &kAvatarOutfit},
-        {"kAvatarLocalSlot", &kAvatarLocalSlot}, {"kAvatarSlotStride", &kAvatarSlotStride},
-        {"kAvatarPosition", &kAvatarPosition}, {"kAvatarShout", &kAvatarShout},
-        {"kLevelName", &kLevelName}, {"kLoginType", &kLoginType}, {"kLoadingType", &kLoadingType},
-        {"kShouldRestart", &kShouldRestart}, {"kGameSpeedBarn", &kGameSpeedBarn},
-        {"kGameSpeedDelta", &kGameSpeedDelta}, {"kCameraSystem", &kCameraSystem},
-        {"kCameraIntermediate", &kCameraIntermediate}, {"kViewProjectionMatrix", &kViewProjectionMatrix},
-        {"kJitterFullHalf", &kJitterFullHalf}, {"kWhiskerCamera", &kWhiskerCamera},
-        {"kCameraAngleX", &kCameraAngleX}, {"kCameraAngleY", &kCameraAngleY},
-        {"kCameraRotation", &kCameraRotation}, {"kCameraFOV", &kCameraFOV}, {"kCameraZoom", &kCameraZoom},
-        {"kHeight", &kHeight}, {"kScale", &kScale}, {"kVoice", &kVoice}, {"kStance", &kStance},
-        {"kBody", &kBody}, {"kWing", &kWing}, {"kHair", &kHair}, {"kMask", &kMask},
-        {"kNeck", &kNeck}, {"kFeet", &kFeet}, {"kHorn", &kHorn}, {"kFace", &kFace},
-        {"kProp", &kProp}, {"kHat", &kHat}, {"kLuaDebugDoString", &kLuaDebugDoString},
-        {"kLocalAvatarLocoUpdate", &kLocalAvatarLocoUpdate}, {"kLuaPushLightUserData", &kLuaPushLightUserData},
-        {"kWingBuffUpdate", &kWingBuffUpdate}, {"kRadianceBarn", &kRadianceBarn},
-        {"kAccountServerSetSession", &kAccountServerSetSession}, {"kHttpClientSetUserAgent", &kHttpClientSetUserAgent},
-        {"kShouldDisplay", &kShouldDisplay}, {"kDoShout", &kDoShout},
-        {"kSetJoinableFunction", &kSetJoinableFunction}, {"kPlayMusicKey", &kPlayMusicKey},
-        {"kStopNote", &kStopNote}, {"kPianoFrame", &kPianoFrame},
-        {"kSharedMemoryPlayPianoSound", &kSharedMemoryPlayPianoSound},
-        {"kInvincibility", &kInvincibility}, {"kAutoCharge", &kAutoCharge},
-        {"kDisableRainDrain", &kDisableRainDrain}, {"kDarkCreatureTame", &kDarkCreatureTame},
-        {"kAllowAfk", &kAllowAfk}, {"kRunSpeed", &kRunSpeed}, {"kSuperSlidey", &kSuperSlidey},
-        {"kAutoCollectAllFragments", &kAutoCollectAllFragments},
-        {"kHideHudExceptForStarFragments", &kHideHudExceptForStarFragments},
-        {"kAutoFragmentWarp", &kAutoFragmentWarp}, {"kFastBurn", &kFastBurn}, {"kDyeDebug", &kDyeDebug},
-        {"kEnableAllRelationshipAbilities", &kEnableAllRelationshipAbilities},
-        {"kFakeCapeLevelEnabled", &kFakeCapeLevelEnabled}, {"kFakeCapeLevel", &kFakeCapeLevel},
-        {"kAllowOverride", &kAllowOverride}, {"kSunMoonXPosition", &kSunMoonXPosition},
-        {"kSunMoonYPosition", &kSunMoonYPosition}, {"kSunMoon", &kSunMoon}, {"kMoonPhase", &kMoonPhase},
-        {"kSunMoonSize", &kSunMoonSize}, {"kExposure", &kExposure},
-        {"kFlameToCandleScale", &kFlameToCandleScale}, {"kFlowerHeight", &kFlowerHeight},
-        {"kFlowerSize", &kFlowerSize}, {"kEnableGameCamSnap", &kEnableGameCamSnap},
-        {"kAvatarCharcoaling", &kAvatarCharcoaling}, {"kAllNpcsHaveRadar", &kAllNpcsHaveRadar},
-        {"kForceEthereal", &kForceEthereal}, {"kRevealPlayers", &kRevealPlayers},
-        {"kEnableMultiplayer", &kEnableMultiplayer}, {"kDisableGates", &kDisableGates},
-        {"kFastHome", &kFastHome}, {"kFreezeKrills", &kFreezeKrills}, {"kBirthdayKrills", &kBirthdayKrills},
-        {"kTguiPauseAnimation", &kTguiPauseAnimation}, {"kUiShowHierarchy", &kUiShowHierarchy},
-        {"kDebugShowSpiritLocations", &kDebugShowSpiritLocations},
-        {"kShowRadarForPreviousWingBuffs", &kShowRadarForPreviousWingBuffs},
-        {"kEnableShrineRadar", &kEnableShrineRadar}, {"kShowAllFeedback", &kShowAllFeedback},
-        {"kMapShrineRadar", &kMapShrineRadar}, {"kFishSchoolDebug", &kFishSchoolDebug},
-        {"kTvDebugUi", &kTvDebugUi}, {"kDisableWindWall", &kDisableWindWall},
-        {"kDisableLevelChangeEvents", &kDisableLevelChangeEvents},
-        {"kDisableObjectCollision", &kDisableObjectCollision}, {"kDisableAllCollision", &kDisableAllCollision},
-        {"kDisableTerrain", &kDisableTerrain}, {"kDisableAvatars", &kDisableAvatars},
-        {"kDisableObjects", &kDisableObjects}, {"kDisableObjectSkirts", &kDisableObjectSkirts},
-        {"kDisableModels", &kDisableModels}, {"kEnableGravity", &kEnableGravity},
-        {"kEnableClouds", &kEnableClouds}, {"kEnableWater", &kEnableWater}, {"kEnableOcean", &kEnableOcean},
-        {"kDisableLights", &kDisableLights}, {"kAutoCompleteQuests", &kAutoCompleteQuests},
-        {"kSuperLaunch", &kSuperLaunch}, {"kSpellEmitter", &kSpellEmitter}, {"kScooterMode", &kScooterMode},
-        {"kRainbowGlow", &kRainbowGlow}, {"kBubbleTrails", &kBubbleTrails}, {"kRainbowTrails", &kRainbowTrails},
-        {"kEnableReverb", &kEnableReverb}, {"kInstrumentAutoPlaySheets", &kInstrumentAutoPlaySheets},
-        {"kInstrumentEasyMode", &kInstrumentEasyMode}, {"kInstrumentRadialLayout", &kInstrumentRadialLayout},
-        {"kDisableRemoteOutfitCache", &kDisableRemoteOutfitCache}, {"kIOSHeadphones", &kIOSHeadphones},
-        {"kFireworksCooldown", &kFireworksCooldown}, {"kFastFlap", &kFastFlap},
-        {"kReadTableMessages", &kReadTableMessages}, {"kStarwatchAuth", &kStarwatchAuth},
-        {"kAutoBurnPlants1", &kAutoBurnPlants1}, {"kAutoBurnPlants2", &kAutoBurnPlants2},
-        {"kAutoBurnPlants3", &kAutoBurnPlants3}
+        {"Game", &Game},
+        {"kLuaState", &kLuaState},
+        {"kGameInit", &kGameInit},
+        {"kControllerGameField", &kControllerGameField},
+        {"kAvatarBarn", &kAvatarBarn},
+        {"kLevelName", &kLevelName},
+        {"kLuaDebugDoString", &kLuaDebugDoString},
+        {"kLocalAvatarLocoUpdate", &kLocalAvatarLocoUpdate},
     };
 }
 
@@ -181,10 +114,10 @@ inline bool LoadCanvasOffsets() {
 
         for (auto it = selected->begin(); it != selected->end(); ++it) {
             const std::string& key = it.key();
-            if (key == "version" || key == "contributors" || key == "comments") continue;
+            if (key == "version" || key == "targetSha256" || key == "contributors" || key == "comments") continue;
             auto target = known.find(key);
             if (target == known.end()) {
-                tsm::log::w("RuntimeOffsets: unknown key '%s' ignored", key.c_str());
+                tsm::log::w("RuntimeOffsets: unknown/unverified key '%s' ignored", key.c_str());
                 continue;
             }
             std::uintptr_t parsed = 0;
@@ -200,7 +133,7 @@ inline bool LoadCanvasOffsets() {
             return false;
         }
         for (const auto& [target, value] : pending) *target = value;
-        tsm::log::i("RuntimeOffsets: loaded %zu offsets for Sky %s from %s",
+        tsm::log::i("RuntimeOffsets: loaded %zu verified offsets for Sky %s from %s",
                     pending.size(), version.c_str(), path.c_str());
         return true;
     } catch (const std::exception& ex) {

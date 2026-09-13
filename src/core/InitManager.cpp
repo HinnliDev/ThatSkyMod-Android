@@ -17,34 +17,17 @@ InitManager& InitManager::Get() {
     return instance;
 }
 
-bool InitManager::IsEarlyInitialized() const {
-    return m_earlyInit;
-}
-
-bool InitManager::IsLateInitialized() const {
-    return m_lateInit;
-}
-
-bool InitManager::AreHooksInstalled() const {
-    return m_hooksInstalled;
-}
-
-bool InitManager::IsUIInitialized() const {
-    return m_uiInitialized;
-}
+bool InitManager::IsEarlyInitialized() const { return m_earlyInit; }
+bool InitManager::IsLateInitialized() const { return m_lateInit; }
+bool InitManager::AreHooksInstalled() const { return m_hooksInstalled; }
+bool InitManager::IsUIInitialized() const { return m_uiInitialized; }
 
 void InitManager::PerformEarlyInit() {
     if (m_earlyInit) return;
-
     tsm::log::init("TSM");
     tsm::log::set_enabled(false);
-
-    if (!tsm::game::hooks::HookManager::Get().InstallCameraHook()) {
-        tsm::log::e("InitManager: CameraSystem hook install failed");
-    } else {
-        tsm::log::i("InitManager: CameraSystem hook installed");
-    }
-
+    // No native hook is installed here. Module base and Canvas runtime offsets are
+    // established first in PerformLateInit(), before any hook installation.
     m_earlyInit = true;
 }
 
@@ -63,22 +46,15 @@ void InitManager::PerformLateInit() {
 
     tsm::lua::functions::InitializeCore();
     tsm::lua::functions::InitializeExtended();
-
     tsm::data::DataManager::Get().LoadAll();
 
-    if (!m_hooksInstalled) {
-        InstallHooks();
-    }
-
+    if (!m_hooksInstalled) InstallHooks();
     m_lateInit = true;
 }
 
 bool InitManager::InstallHooks() {
     if (m_hooksInstalled) return true;
-
-    if (tsm::game::memory::GetBase() == 0) {
-        tsm::game::memory::InitializeBase();
-    }
+    if (tsm::game::memory::GetBase() == 0) tsm::game::memory::InitializeBase();
 
     if (!tsm::game::hooks::HookManager::Get().InstallAll()) {
         tsm::log::e("InitManager: Game hooks install failed");
@@ -92,11 +68,9 @@ bool InitManager::InstallHooks() {
 
 void InitManager::InitializeUI() {
     if (m_uiInitialized) return;
-
     tsm::ui::Initialize();
     m_uiInitialized = true;
     tsm::log::i("InitManager: UI system initialized");
-
     tsm::core::UpdateChecker::Get().CheckForUpdates();
 }
 

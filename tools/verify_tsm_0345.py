@@ -6,6 +6,7 @@ import sys
 
 R = Path(__file__).resolve().parents[1]
 errors = []
+TARGET_SHA256 = "778b2e1d56c0fc2a47ee5b9db8b0384e65f70660dd4479a9578880c80958281f"
 
 def fail(msg):
     errors.append(msg)
@@ -13,7 +14,6 @@ def fail(msg):
 def read(rel):
     return (R / rel).read_text(encoding="utf-8")
 
-# Canvas metadata: only fields supported by the current Canvas parser are emitted.
 cfg = json.loads(read("config/config.json"))
 if (cfg.get("majorVersion"), cfg.get("minorVersion"), cfg.get("patchVersion")) != (0, 34, 5):
     fail("config semantic version is not 0.34.5")
@@ -29,32 +29,27 @@ if cfg.get("offsetsUrl") != "https://raw.githubusercontent.com/HinnliDev/ThatSky
 if cfg.get("dependencies") != []:
     fail("dependencies must remain an array")
 
-# Published Canvas offsets file contains only independently verified 0.34.5 values.
 offsets_json = json.loads(read("config/offsets.json"))
 if offsets_json.get("version") != "0.34.5":
     fail("offsets.json version is not 0.34.5")
-expected_json = {
+if offsets_json.get("targetSha256") != TARGET_SHA256:
+    fail("offsets.json targetSha256 does not match the REMCP target image")
+
+verified = {
     "Game": 0x329BA20,
-    "AudienceBarn": 0x3021B60,
-    "CandleBarn": 0x3053298,
+    "kLuaState": 0x20,
     "kGameInit": 0x172B17C,
+    "kControllerGameField": 0x300,
+    "kAvatarBarn": 0x310,
+    "kLevelName": 0x948,
     "kLuaDebugDoString": 0x28C03F4,
     "kLocalAvatarLocoUpdate": 0x11C3720,
-    "kLuaState": 0x20,
-    "kSystemAccountsAndroid": 0x2F859A8,
-    "kAccountServerClient": 0x1C0,
-    "kAvatarBarn": 0x310,
-    "kWingBuffBarn": 0x660,
-    "kCandleBarnField": 0x680,
-    "kDarkstoneBarn": 0x6D0,
-    "kRadianceBarnField": 0x6D8,
-    "kLevelStateBarn": 0x898,
-    "kLevelName": 0x948,
-    "kLoginType": 0x1460,
-    "kShouldRestart": 0x1464,
-    "kLoadingType": 0x1470,
 }
-for key, expected in expected_json.items():
+metadata_keys = {"version", "targetSha256", "contributors", "comments"}
+for key in offsets_json:
+    if key not in metadata_keys and key not in verified:
+        fail(f"unverified key published in offsets.json: {key}")
+for key, expected in verified.items():
     value = offsets_json.get(key)
     try:
         actual = int(value, 0) if isinstance(value, str) else int(value)
@@ -64,15 +59,29 @@ for key, expected in expected_json.items():
     if actual != expected:
         fail(f"offsets.json {key} != 0x{expected:X}")
 
-# Compiled defaults must agree with the verified JSON and keep unverified code RVAs off.
 offsets = read("include/game/memory/offsets.h")
 def header_value(symbol):
     m = re.search(r"\b" + re.escape(symbol) + r"\b\s*=\s*(0[xX][0-9A-Fa-f]+|\d+)", offsets)
     return int(m.group(1), 0) if m else None
 
-for key, expected in expected_json.items():
+for key, expected in verified.items():
     if header_value(key) != expected:
         fail(f"compiled {key} != 0x{expected:X}")
+
+unverified_layout = [
+    "AudienceBarn", "CandleBarn", "kSystemAccountsAndroid", "kAccountServerClient",
+    "kAccountBarnGameField", "kWingBuffBarn", "kCandleBarnField", "kTimelineBarn", "kEventBarn",
+    "kDarkstoneBarn", "kRadianceBarnField", "kDarkCreatureBarn", "kFriendBarn", "kFriendDataBarn",
+    "kAffinityBarn", "kPickupEmitterBarn", "kPickupBarn", "kWaxChunkBarn", "kPickupNodeBarn",
+    "kMusicBarn", "kSheetMusicBarn", "kLevelStateBarn", "kGameMode", "kServerHostname",
+    "kNetPlayerBarnPtr", "kNetPlayerBarnOffset", "kFirstPlayerIdOffset", "kFirstPlayerUuidOffset",
+    "kPlayerIdStride", "kAccountBarn", "kAvatarOutfit", "kAvatarLocalSlot", "kAvatarSlotStride",
+    "kAvatarPosition", "kAvatarShout", "kLoginType", "kLoadingType", "kShouldRestart",
+    "kGameSpeedBarn", "kGameSpeedDelta", "kCameraSystem", "kCameraIntermediate",
+    "kViewProjectionMatrix", "kJitterFullHalf", "kWhiskerCamera", "kCameraAngleX", "kCameraAngleY",
+    "kCameraRotation", "kCameraFOV", "kCameraZoom", "kHeight", "kScale", "kVoice", "kStance",
+    "kBody", "kWing", "kHair", "kMask", "kNeck", "kFeet", "kHorn", "kFace", "kProp", "kHat",
+]
 
 unverified_native = [
     "kLuaPushLightUserData", "kWingBuffUpdate", "kRadianceBarn",
@@ -82,31 +91,39 @@ unverified_native = [
     "kDarkCreatureTame", "kAllowAfk", "kRunSpeed", "kSuperSlidey",
     "kAutoCollectAllFragments", "kHideHudExceptForStarFragments", "kAutoFragmentWarp",
     "kFastBurn", "kDyeDebug", "kEnableAllRelationshipAbilities", "kFakeCapeLevelEnabled",
-    "kFakeCapeLevel", "kAllowOverride", "kSunMoonXPosition", "kSunMoonYPosition",
-    "kSunMoon", "kMoonPhase", "kSunMoonSize", "kExposure", "kFlameToCandleScale",
-    "kFlowerHeight", "kFlowerSize", "kEnableGameCamSnap", "kAvatarCharcoaling",
-    "kAllNpcsHaveRadar", "kForceEthereal", "kRevealPlayers", "kEnableMultiplayer",
-    "kDisableGates", "kFastHome", "kFreezeKrills", "kBirthdayKrills",
-    "kTguiPauseAnimation", "kUiShowHierarchy", "kDebugShowSpiritLocations",
-    "kShowRadarForPreviousWingBuffs", "kEnableShrineRadar", "kShowAllFeedback",
-    "kMapShrineRadar", "kFishSchoolDebug", "kTvDebugUi", "kDisableWindWall",
-    "kDisableLevelChangeEvents", "kDisableObjectCollision", "kDisableAllCollision",
-    "kDisableTerrain", "kDisableAvatars", "kDisableObjects", "kDisableObjectSkirts",
-    "kDisableModels", "kEnableGravity", "kEnableClouds", "kEnableWater", "kEnableOcean",
-    "kDisableLights", "kAutoCompleteQuests", "kSuperLaunch", "kSpellEmitter",
-    "kScooterMode", "kRainbowGlow", "kBubbleTrails", "kRainbowTrails", "kEnableReverb",
-    "kInstrumentAutoPlaySheets", "kInstrumentEasyMode", "kInstrumentRadialLayout",
-    "kDisableRemoteOutfitCache", "kIOSHeadphones", "kFireworksCooldown", "kFastFlap",
-    "kReadTableMessages", "kStarwatchAuth", "kAutoBurnPlants1", "kAutoBurnPlants2",
+    "kFakeCapeLevel", "kAllowOverride", "kSunMoonXPosition", "kSunMoonYPosition", "kSunMoon",
+    "kMoonPhase", "kSunMoonSize", "kExposure", "kFlameToCandleScale", "kFlowerHeight",
+    "kFlowerSize", "kEnableGameCamSnap", "kAvatarCharcoaling", "kAllNpcsHaveRadar",
+    "kForceEthereal", "kRevealPlayers", "kEnableMultiplayer", "kDisableGates", "kFastHome",
+    "kFreezeKrills", "kBirthdayKrills", "kTguiPauseAnimation", "kUiShowHierarchy",
+    "kDebugShowSpiritLocations", "kShowRadarForPreviousWingBuffs", "kEnableShrineRadar",
+    "kShowAllFeedback", "kMapShrineRadar", "kFishSchoolDebug", "kTvDebugUi", "kDisableWindWall",
+    "kDisableLevelChangeEvents", "kDisableObjectCollision", "kDisableAllCollision", "kDisableTerrain",
+    "kDisableAvatars", "kDisableObjects", "kDisableObjectSkirts", "kDisableModels", "kEnableGravity",
+    "kEnableClouds", "kEnableWater", "kEnableOcean", "kDisableLights", "kAutoCompleteQuests",
+    "kSuperLaunch", "kSpellEmitter", "kScooterMode", "kRainbowGlow", "kBubbleTrails",
+    "kRainbowTrails", "kEnableReverb", "kInstrumentAutoPlaySheets", "kInstrumentEasyMode",
+    "kInstrumentRadialLayout", "kDisableRemoteOutfitCache", "kIOSHeadphones", "kFireworksCooldown",
+    "kFastFlap", "kReadTableMessages", "kStarwatchAuth", "kAutoBurnPlants1", "kAutoBurnPlants2",
     "kAutoBurnPlants3",
 ]
-for symbol in unverified_native:
-    if header_value(symbol) != 0:
-        fail(f"unverified compiled native RVA is enabled: {symbol}=0x{header_value(symbol):X}")
+for symbol in unverified_layout + unverified_native:
+    value = header_value(symbol)
+    if value is None:
+        fail(f"offset symbol missing from header: {symbol}")
+    elif value != 0:
+        fail(f"unverified compiled offset is enabled: {symbol}=0x{value:X}")
     if symbol in offsets_json:
-        fail(f"unverified native RVA was published in offsets.json: {symbol}")
+        fail(f"unverified offset was published in offsets.json: {symbol}")
 
-# The Lua queue must have a real verified recurring game-thread execution path.
+runtime = read("include/game/memory/RuntimeOffsets.h")
+for needle in ("libTSM_offsets.json", "get_ConfigsPath", "0.34.5", "KnownOffsets", "ParseOffsetValue", "targetSha256"):
+    if needle not in runtime:
+        fail("runtime offsets loader invariant missing: " + needle)
+for symbol in unverified_layout + unverified_native:
+    if re.search(r'\{"' + re.escape(symbol) + r'"\s*,', runtime):
+        fail("unverified offset is runtime-overridable: " + symbol)
+
 lua_hook = read("src/game/hooks/LuaHook.cpp")
 for needle in ("kLocalAvatarLocoUpdate", "LocalAvatarLocoUpdate_Hook", "ProcessNext", "WaxRunner::Get().Tick()"):
     if needle not in lua_hook:
@@ -114,18 +131,24 @@ for needle in ("kLocalAvatarLocoUpdate", "LocalAvatarLocoUpdate_Hook", "ProcessN
 if "install_rva(\"LuaPushLightUserData\"" in lua_hook:
     fail("legacy LuaPushLightUserData hook is still active")
 
-# Canvas runtime offsets must be loaded before Lua/native hooks initialize.
-runtime = read("include/game/memory/RuntimeOffsets.h")
-for needle in ("libTSM_offsets.json", "get_ConfigsPath", "0.34.5", "KnownOffsets", "ParseOffsetValue"):
-    if needle not in runtime:
-        fail("runtime offsets loader invariant missing: " + needle)
+lua_bridge = read("src/game/interop/lua_bridge.cpp")
+if "rva == 0" not in lua_bridge or "base == 0" not in lua_bridge:
+    fail("lua_bridge does not reject zero base/RVA before arithmetic")
+
 init = read("src/core/InitManager.cpp")
 if "LoadCanvasOffsets()" not in init:
     fail("InitManager does not load Canvas offsets")
 elif init.index("LoadCanvasOffsets()") > init.index("InitializeCore()"):
     fail("Canvas offsets are loaded too late")
+if "PerformEarlyInit()" in init and "InstallCameraHook()" in init.split("void InitManager::PerformLateInit()", 1)[0]:
+    fail("native camera hook is installed before runtime offsets load")
 
-# Unverified AOB patch paths that were known to be stale must not be active.
+patch_manager = read("src/progression/PatchManager.cpp")
+auto_wax = read("src/progression/AutoWaxTools.cpp")
+for stale in ("CreateNopPatchesForPattern(kAutoCollectWaxPattern", "CreateNopPatchesForPattern(kAutoBurnCandlesPattern"):
+    if stale in patch_manager or stale in auto_wax:
+        fail("stale 0.34.5 AOB scanner path remains reachable: " + stale)
+
 feature_manager = read("src/features/manager/FeatureManager.cpp")
 if "CipherScanIdaPattern(kSuperFlight)" in feature_manager:
     fail("unverified SuperFlight signature is still active")
@@ -133,25 +156,31 @@ unlocks = read("src/features/unlocks/UnlockFeatures.cpp")
 if "CreateNopPatchesForPattern" in unlocks:
     fail("unverified unlock AOB signatures are still active")
 
-# All zero-RVA memory primitives must fail closed rather than translating zero to module base.
 address_h = read("include/game/memory/Address.h")
 if "rva == 0" not in address_h:
     fail("RvaToPtr does not reject RVA zero")
+mem_h = read("include/game/memory/mem.h")
+if "off == 0" not in mem_h:
+    fail("mem::add does not reject struct offset zero")
 memory_cpp = read("src/game/memory/Memory.cpp")
 if memory_cpp.count("rva == 0") < 5:
     fail("Memory direct RVA helpers do not consistently reject zero")
 
-# Credits and new repository-local icon.
+api_cpp = read("src/game/memory/api.cpp")
+for needle in ("kAvatarLocalSlot == 0", "kNetPlayerBarnPtr == 0", "kCameraSystem == 0", "CandleBarn == 0"):
+    if needle not in api_cpp:
+        fail("api fail-closed invariant missing: " + needle)
+shout = read("src/game/hooks/ShoutHook.cpp")
+if "kDoShout == 0" not in shout or "kAvatarShout == 0" not in shout:
+    fail("ShoutHook is not fail-closed for unverified RVA/layout")
+
 readme = read("README.md")
 if "Developer: XeTrinityz" not in readme or "Contributors: Catyro, Hinnli" not in readme:
     fail("README credits are not in the requested Developer/Contributors format")
-if "Developer / Original developer" in readme or "Co-authors / Contributors" in readme:
-    fail("legacy slash-style README credits remain")
 icon = (R / "resources/icons/icon.png")
 if not icon.is_file() or icon.read_bytes()[:8] != b"\x89PNG\r\n\x1a\n":
     fail("resources/icons/icon.png is missing or is not a PNG")
 
-# Updater must point only at the maintained repository.
 updater = read("src/core/UpdateChecker.cpp")
 for needle in ("/repos/HinnliDev/ThatSkyMod-Android/releases/latest", "ThatSkyMod-Android-arm64-v8a.so", "Version{ 0, 34, 5 }"):
     if needle not in updater:

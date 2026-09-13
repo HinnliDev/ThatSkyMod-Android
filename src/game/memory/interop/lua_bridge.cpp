@@ -9,7 +9,7 @@
 namespace tsm::lua::bridge {
 
 namespace {
-    using DebugDoStringFn = int(*)(void* , const char* );
+    using DebugDoStringFn = int(*)(void*, const char*);
 }
 
 int Run(const char* script, std::string& out, int* outStatus)
@@ -30,15 +30,15 @@ int Run(const char* script, std::string& out, int* outStatus)
         return rc;
     }
 
-    std::uintptr_t abs = tsm::game::memory::GetBase() + tsm::game::Offsets::kLuaDebugDoString;
-    if (!abs) {
-        out = "DoString address is null";
+    const std::uintptr_t base = tsm::game::memory::GetBase();
+    const std::uintptr_t rva = tsm::game::Offsets::kLuaDebugDoString;
+    if (base == 0 || rva == 0) {
+        out = "DoString address is unavailable";
         if (outStatus) *outStatus = rc;
         return rc;
     }
 
-    auto fn = reinterpret_cast<DebugDoStringFn>(abs);
-
+    auto fn = reinterpret_cast<DebugDoStringFn>(base + rva);
     rc = fn(L, script);
     out = (rc == 0) ? "ok" : "lua error";
     if (outStatus) *outStatus = rc;

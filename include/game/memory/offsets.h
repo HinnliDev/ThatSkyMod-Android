@@ -1,8 +1,8 @@
 #pragma once
 
-// Sky 0.34.5 verified anchors; unconfirmed module RVAs are 0 and fail closed.
+// Sky 0.34.5 independently verified anchors; every unverified RVA/layout offset is 0 and fails closed.
 // libBootloader.so SHA-256: 778b2e1d56c0fc2a47ee5b9db8b0384e65f70660dd4479a9578880c80958281f
-// Runtime values are mutable so Canvas' local offsets JSON can safely override known keys.
+// Runtime overrides are intentionally restricted to the independently verified whitelist.
 
 #include <cstdint>
 #include <utils/common/obfuscate.h>
@@ -10,83 +10,83 @@
 namespace tsm { namespace game { namespace Offsets {
 
 	inline std::uintptr_t Game = 0x329BA20;
-	inline std::uintptr_t AudienceBarn = 0x3021B60;
-	inline std::uintptr_t CandleBarn = 0x3053298;
+	inline std::uintptr_t AudienceBarn = 0x0;
+	inline std::uintptr_t CandleBarn = 0x0;
 
 	inline std::uintptr_t kLuaState = 0x20;
 	inline std::uintptr_t kGameInit = 0x172B17C;
-	inline std::uintptr_t kSystemAccountsAndroid = 0x2F859A8;
-	inline std::uintptr_t kAccountServerClient = 0x1C0;
-	inline std::uintptr_t kAccountBarnGameField = 0x1D8;
+	inline std::uintptr_t kSystemAccountsAndroid = 0x0;
+	inline std::uintptr_t kAccountServerClient = 0x0;
+	inline std::uintptr_t kAccountBarnGameField = 0x0;
 	inline std::uintptr_t kControllerGameField = 0x300;
-	inline std::uintptr_t kWingBuffBarn = 0x660;
-	inline std::uintptr_t kCandleBarnField = 0x680;
-	inline std::uintptr_t kTimelineBarn = 0x6A0;
-	inline std::uintptr_t kEventBarn = 0x6A8;
-	inline std::uintptr_t kDarkstoneBarn = 0x6D0;
-	inline std::uintptr_t kRadianceBarnField = 0x6D8;
-	inline std::uintptr_t kDarkCreatureBarn = 0x6E8;
-	inline std::uintptr_t kFriendBarn = 0x770;
-	inline std::uintptr_t kFriendDataBarn = 0x778;
-	inline std::uintptr_t kAffinityBarn = 0x780;
-	inline std::uintptr_t kPickupEmitterBarn = 0x7C0;
-	inline std::uintptr_t kPickupBarn = 0x7C8;
-	inline std::uintptr_t kWaxChunkBarn = 0x7D0;
-	inline std::uintptr_t kPickupNodeBarn = 0x7D8;
-	inline std::uintptr_t kMusicBarn = 0x878;
-	inline std::uintptr_t kSheetMusicBarn = 0x888;
-	inline std::uintptr_t kLevelStateBarn = 0x898;
-	inline std::uintptr_t kGameMode = 0x940;
-	inline std::uintptr_t kServerHostname = 0x1350;
+	inline std::uintptr_t kWingBuffBarn = 0x0;
+	inline std::uintptr_t kCandleBarnField = 0x0;
+	inline std::uintptr_t kTimelineBarn = 0x0;
+	inline std::uintptr_t kEventBarn = 0x0;
+	inline std::uintptr_t kDarkstoneBarn = 0x0;
+	inline std::uintptr_t kRadianceBarnField = 0x0;
+	inline std::uintptr_t kDarkCreatureBarn = 0x0;
+	inline std::uintptr_t kFriendBarn = 0x0;
+	inline std::uintptr_t kFriendDataBarn = 0x0;
+	inline std::uintptr_t kAffinityBarn = 0x0;
+	inline std::uintptr_t kPickupEmitterBarn = 0x0;
+	inline std::uintptr_t kPickupBarn = 0x0;
+	inline std::uintptr_t kWaxChunkBarn = 0x0;
+	inline std::uintptr_t kPickupNodeBarn = 0x0;
+	inline std::uintptr_t kMusicBarn = 0x0;
+	inline std::uintptr_t kSheetMusicBarn = 0x0;
+	inline std::uintptr_t kLevelStateBarn = 0x0;
+	inline std::uintptr_t kGameMode = 0x0;
+	inline std::uintptr_t kServerHostname = 0x0;
 	inline std::uintptr_t kAvatarBarn = 0x310;
-	inline std::uintptr_t kNetPlayerBarnPtr = 0x1C8;
-	inline std::uintptr_t kNetPlayerBarnOffset = 0x20;
+	inline std::uintptr_t kNetPlayerBarnPtr = 0x0;
+	inline std::uintptr_t kNetPlayerBarnOffset = 0x0;
 
-	inline std::uintptr_t kFirstPlayerIdOffset = 0x10;
-	inline std::uintptr_t kFirstPlayerUuidOffset = 0x15;
-	inline std::uintptr_t kPlayerIdStride = 0x5220;
-	inline std::uintptr_t kAccountBarn = 0x8;
-	inline std::uintptr_t kAvatarOutfit = 0x58;
-	inline std::uintptr_t kAvatarLocalSlot = 0x30;
-	inline std::uintptr_t kAvatarSlotStride = 0x10A30;
-	inline std::uintptr_t kAvatarPosition = 0x18;
-	inline std::uintptr_t kAvatarShout = 0x60;
+	inline std::uintptr_t kFirstPlayerIdOffset = 0x0;
+	inline std::uintptr_t kFirstPlayerUuidOffset = 0x0;
+	inline std::uintptr_t kPlayerIdStride = 0x0;
+	inline std::uintptr_t kAccountBarn = 0x0;
+	inline std::uintptr_t kAvatarOutfit = 0x0;
+	inline std::uintptr_t kAvatarLocalSlot = 0x0;
+	inline std::uintptr_t kAvatarSlotStride = 0x0;
+	inline std::uintptr_t kAvatarPosition = 0x0;
+	inline std::uintptr_t kAvatarShout = 0x0;
 	inline std::uintptr_t kLevelName = 0x948;
 
-	inline std::uintptr_t kLoginType = 0x1460;
+	inline std::uintptr_t kLoginType = 0x0;
 	inline std::uintptr_t& kAccountType = kLoginType;
-	inline std::uintptr_t kLoadingType = 0x1470;
+	inline std::uintptr_t kLoadingType = 0x0;
 	inline std::uintptr_t& kAccountAuxState = kLoadingType;
-	inline std::uintptr_t kShouldRestart = 0x1464;
+	inline std::uintptr_t kShouldRestart = 0x0;
 	inline std::uintptr_t& kAccountSwitchRequested = kShouldRestart;
 
-	inline std::uintptr_t kGameSpeedBarn = 0x30;
-	inline std::uintptr_t kGameSpeedDelta = 0x28;
-	inline std::uintptr_t kCameraSystem = 0x70;
-	inline std::uintptr_t kCameraIntermediate = 0x158;
-	inline std::uintptr_t kViewProjectionMatrix = 0x230;
-	inline std::uintptr_t kJitterFullHalf = 0x60;
-	inline std::uintptr_t kWhiskerCamera = 0x10D0;
-	inline std::uintptr_t kCameraAngleX = 0x70C;
-	inline std::uintptr_t kCameraAngleY = 0x710;
-	inline std::uintptr_t kCameraRotation = 0x714;
-	inline std::uintptr_t kCameraFOV = 0x6CC;
-	inline std::uintptr_t kCameraZoom = 0x700;
+	inline std::uintptr_t kGameSpeedBarn = 0x0;
+	inline std::uintptr_t kGameSpeedDelta = 0x0;
+	inline std::uintptr_t kCameraSystem = 0x0;
+	inline std::uintptr_t kCameraIntermediate = 0x0;
+	inline std::uintptr_t kViewProjectionMatrix = 0x0;
+	inline std::uintptr_t kJitterFullHalf = 0x0;
+	inline std::uintptr_t kWhiskerCamera = 0x0;
+	inline std::uintptr_t kCameraAngleX = 0x0;
+	inline std::uintptr_t kCameraAngleY = 0x0;
+	inline std::uintptr_t kCameraRotation = 0x0;
+	inline std::uintptr_t kCameraFOV = 0x0;
+	inline std::uintptr_t kCameraZoom = 0x0;
 
-	inline std::uintptr_t kHeight = 0x18DC;
-	inline std::uintptr_t kScale = 0x18E0;
-	inline std::uintptr_t kVoice = 0x1A50;
-	inline std::uintptr_t kStance = 0x1A51;
-	inline std::uintptr_t kBody = 0x144;
-	inline std::uintptr_t kWing = 0x384;
-	inline std::uintptr_t kHair = 0x5C4;
-	inline std::uintptr_t kMask = 0x804;
-	inline std::uintptr_t kNeck = 0xA44;
-	inline std::uintptr_t kFeet = 0xC84;
-	inline std::uintptr_t kHorn = 0xEC4;
-	inline std::uintptr_t kFace = 0x1104;
-	inline std::uintptr_t kProp = 0x1344;
-	inline std::uintptr_t kHat = 0x1584;
+	inline std::uintptr_t kHeight = 0x0;
+	inline std::uintptr_t kScale = 0x0;
+	inline std::uintptr_t kVoice = 0x0;
+	inline std::uintptr_t kStance = 0x0;
+	inline std::uintptr_t kBody = 0x0;
+	inline std::uintptr_t kWing = 0x0;
+	inline std::uintptr_t kHair = 0x0;
+	inline std::uintptr_t kMask = 0x0;
+	inline std::uintptr_t kNeck = 0x0;
+	inline std::uintptr_t kFeet = 0x0;
+	inline std::uintptr_t kHorn = 0x0;
+	inline std::uintptr_t kFace = 0x0;
+	inline std::uintptr_t kProp = 0x0;
+	inline std::uintptr_t kHat = 0x0;
 
 	inline std::uintptr_t kLuaDebugDoString = 0x28C03F4;
 	inline std::uintptr_t kLocalAvatarLocoUpdate = 0x11C3720;

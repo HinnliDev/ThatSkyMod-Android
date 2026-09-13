@@ -13,9 +13,9 @@
 namespace tsm { namespace game { namespace hooks { namespace shout {
 
 namespace {
-    using DoShoutFn = std::int64_t(*)(std::uintptr_t , unsigned int, unsigned int,
+    using DoShoutFn = std::int64_t(*)(std::uintptr_t, unsigned int, unsigned int,
                                       char, char, int, char, char,
-                                      float, float, float, float, float32x4_t , float);
+                                      float, float, float, float, float32x4_t, float);
 
     DoShoutFn s_origDoShout = nullptr;
 
@@ -44,12 +44,12 @@ namespace {
     std::mutex s_colorMutex;
 
     std::uintptr_t ResolvePlayerShout() {
+        if (tsm::game::Offsets::kAvatarLocalSlot == 0 || tsm::game::Offsets::kAvatarShout == 0) return 0;
         try {
             auto barn = tsm::game::api::AvatarBarn();
             if (!barn) return 0;
-            std::uintptr_t barnAddr = reinterpret_cast<std::uintptr_t>(barn);
-            std::uintptr_t fieldAddr = barnAddr + tsm::game::Offsets::kAvatarLocalSlot
-                                                + tsm::game::Offsets::kAvatarShout;
+            const std::uintptr_t fieldAddr = reinterpret_cast<std::uintptr_t>(barn) +
+                tsm::game::Offsets::kAvatarLocalSlot + tsm::game::Offsets::kAvatarShout;
             return *reinterpret_cast<std::uintptr_t*>(fieldAddr);
         } catch (...) {
             return 0;
@@ -58,18 +58,13 @@ namespace {
 
     float32x4_t RandomizeAndGetShoutColor() {
         static const float rainbowHues[7][4] = {
-            {1.0f, 0.0f, 0.0f, 1.0f},
-            {1.0f, 0.5f, 0.0f, 1.0f},
-            {1.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 1.0f, 0.0f, 1.0f},
-            {0.0f, 0.0f, 1.0f, 1.0f},
-            {0.3f, 0.0f, 0.5f, 1.0f},
+            {1.0f, 0.0f, 0.0f, 1.0f}, {1.0f, 0.5f, 0.0f, 1.0f},
+            {1.0f, 1.0f, 0.0f, 1.0f}, {0.0f, 1.0f, 0.0f, 1.0f},
+            {0.0f, 0.0f, 1.0f, 1.0f}, {0.3f, 0.0f, 0.5f, 1.0f},
             {0.5f, 0.0f, 0.5f, 1.0f}
         };
-
         std::lock_guard<std::mutex> lock(s_colorMutex);
-        int hueIndex = s_rng() % 7;
-        s_customShoutColor.vector = vld1q_f32(rainbowHues[hueIndex]);
+        s_customShoutColor.vector = vld1q_f32(rainbowHues[s_rng() % 7]);
         return s_customShoutColor.vector;
     }
 
@@ -77,22 +72,15 @@ namespace {
                                           char a4, char a5, int a6, char a7, char a8,
                                           float a9, float a10, float a11, float a12,
                                           float32x4_t shoutColor, float a14) {
-
         if (s_editorState.enabled.load(std::memory_order_relaxed)) {
-            std::uintptr_t playerShout = ResolvePlayerShout();
-            bool isPlayerShout = (playerShout != 0 && avatarShout == playerShout);
-
-            if (isPlayerShout) {
+            const std::uintptr_t playerShout = ResolvePlayerShout();
+            if (playerShout != 0 && avatarShout == playerShout) {
                 try {
                     if (s_editorState.rainbowMode) {
                         shoutColor = RandomizeAndGetShoutColor();
                     } else {
-                        float rgba[4] = {
-                            s_editorState.colorR,
-                            s_editorState.colorG,
-                            s_editorState.colorB,
-                            s_editorState.colorA
-                        };
+                        float rgba[4] = {s_editorState.colorR, s_editorState.colorG,
+                                         s_editorState.colorB, s_editorState.colorA};
                         shoutColor = vld1q_f32(rgba);
                     }
                 } catch (...) {
@@ -101,49 +89,45 @@ namespace {
         }
 
         if (s_origDoShout) {
-            return s_origDoShout(avatarShout, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, shoutColor, a14);
+            return s_origDoShout(avatarShout, a2, a3, a4, a5, a6, a7, a8,
+                                 a9, a10, a11, a12, shoutColor, a14);
         }
         return static_cast<std::int64_t>(avatarShout);
     }
 }
 
 bool Install() {
+    if (tsm::game::Offsets::kDoShout == 0) {
+        s_editorState.enabled.store(false, std::memory_order_relaxed);
+        tsm::log::w("ShoutHook: disabled: kDoShout ABI/RVA is not verified for Sky 0.34.5");
+        return true;
+    }
     if (tsm::game::memory::GetBase() == 0) {
         tsm::log::e("ShoutHook: Module base not initialized");
         return false;
     }
-
-    if (tsm::game::Offsets::kDoShout != 0 && !tsm::utils::hooking::install_rva("DoShout",
-                                 tsm::game::Offsets::kDoShout,
-                                 (void*)DoShout_Hook,
-                                 (void**)&s_origDoShout)) {
+    if (!tsm::utils::hooking::install_rva("DoShout", tsm::game::Offsets::kDoShout,
+                                           (void*)DoShout_Hook, (void**)&s_origDoShout)) {
         tsm::log::e("ShoutHook: DoShout hook failed");
         return false;
     }
-
     tsm::log::i("ShoutHook: Installed successfully");
     return true;
 }
 
-std::uintptr_t GetPlayerShout() {
-    return ResolvePlayerShout();
-}
+std::uintptr_t GetPlayerShout() { return ResolvePlayerShout(); }
 
 bool IsShoutEditorEnabled() {
     return s_editorState.enabled.load(std::memory_order_relaxed);
 }
 
 void SetShoutEditorEnabled(bool enabled) {
+    if (tsm::game::Offsets::kDoShout == 0 || tsm::game::Offsets::kAvatarShout == 0) enabled = false;
     s_editorState.enabled.store(enabled, std::memory_order_relaxed);
 }
 
-bool IsRainbowModeEnabled() {
-    return s_editorState.rainbowMode;
-}
-
-void SetRainbowMode(bool enabled) {
-    s_editorState.rainbowMode = enabled;
-}
+bool IsRainbowModeEnabled() { return s_editorState.rainbowMode; }
+void SetRainbowMode(bool enabled) { s_editorState.rainbowMode = enabled; }
 
 void GetShoutColor(float& r, float& g, float& b, float& a) {
     r = s_editorState.colorR;
@@ -159,12 +143,7 @@ void SetShoutColor(float r, float g, float b, float a) {
     s_editorState.colorA = a;
 }
 
-std::uint8_t GetVoiceType() {
-    return s_editorState.voiceType;
-}
-
-void SetVoiceType(std::uint8_t voice) {
-    s_editorState.voiceType = voice;
-}
+std::uint8_t GetVoiceType() { return s_editorState.voiceType; }
+void SetVoiceType(std::uint8_t voice) { s_editorState.voiceType = voice; }
 
 }}}}
