@@ -113,7 +113,7 @@ bool Install() {
         return false;
     }
 
-    if (!tsm::utils::hooking::install_rva("DoShout",
+    if (tsm::game::Offsets::kDoShout != 0 && !tsm::utils::hooking::install_rva("DoShout",
                                  tsm::game::Offsets::kDoShout,
                                  (void*)DoShout_Hook,
                                  (void**)&s_origDoShout)) {

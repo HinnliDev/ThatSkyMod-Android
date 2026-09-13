@@ -1,0 +1,146 @@
+name: Android Release
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+      - tsm-0.34.5-final
+
+permissions:
+  contents: write
+
+jobs:
+  build-release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install NDK and CMake
+        run: sdkmanager "ndk;27.2.12479018" "cmake;3.22.1"
+
+      - name: Preflight 0.34.5 offsets and metadata
+        run: python3 tools/verify_tsm_0345.py
+
+      - name: Final repository audit
+        shell: bash
+        run: |
+          set -euo pipefail
+          patterns=(
+            '0\.34\.'
+            'install_rva'
+            'base[[:space:]]*\+'
+            'getAbsoluteAddress'
+            'DobbyHook'
+            'A64HookFunction'
+            'github\.com'
+            'releases'
+            'XeTrinityz'
+            'Catyro'
+            'Hinnli'
+            'contributors'
+            'repository'
+            'offsetsUrl'
+            'ProcessNext'
+            'LuaPushLightUserData'
+          )
+          for pattern in "${patterns[@]}"; do
+            echo "===== audit: ${pattern} ====="
+            git grep -n -E "${pattern}" -- . || true
+          done
+          legacy_repo="XeTrinityz/"'ThatSkyMod-Android'
+          if git grep -n -F "${legacy_repo}" -- .; then
+            echo 'Legacy updater/download repository reference detected.' >&2
+            exit 1
+          fi
+
+      - name: Configure arm64-v8a Release
+        run: |
+          "$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake" -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE="$ANDROID_SDK_ROOT/ndk/27.2.12479018/build/cmake/android.toolchain.cmake" \
+            -DANDROID_ABI=arm64-v8a \
+            -DANDROID_PLATFORM=android-26 \
+            -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: |
+          "$ANDROID_SDK_ROOT/cmake/3.22.1/bin/cmake" --build build --config Release --parallel
+
+      - name: Verify embedded Canvas sections
+        shell: bash
+        run: |
+          set -euo pipefail
+          TOOLBIN="$ANDROID_SDK_ROOT/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin"
+          "$TOOLBIN/llvm-readelf" -S build/libTSM.so | tee build/sections.txt
+          grep -F '.config' build/sections.txt
+          grep -F '.icon' build/sections.txt
+          "$TOOLBIN/llvm-objcopy" --dump-section .config=build/embedded-config.json build/libTSM.so
+          "$TOOLBIN/llvm-objcopy" --dump-section .icon=build/embedded-icon.png build/libTSM.so
+          cmp -s config/config.json build/embedded-config.json
+          cmp -s resources/icons/icon.png build/embedded-icon.png
+          python3 - <<'PY'
+          import json
+          cfg = json.load(open('build/embedded-config.json', encoding='utf-8'))
+          assert cfg['author'] == 'XeTrinityz, Catyro, Hinnli'
+          assert (cfg['majorVersion'], cfg['minorVersion'], cfg['patchVersion']) == (0, 34, 5)
+          assert cfg['offsetsUrl'].endswith('/HinnliDev/ThatSkyMod-Android/master/config/offsets.json')
+          assert all(k not in cfg for k in ('contributors', 'version', 'repository'))
+          print('embedded Canvas metadata OK')
+          PY
+
+      - name: Stage release asset
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p dist
+          cp build/libTSM.so dist/ThatSkyMod-Android-arm64-v8a.so
+          test -s dist/ThatSkyMod-Android-arm64-v8a.so
+          sha256sum dist/ThatSkyMod-Android-arm64-v8a.so | tee dist/SHA256SUMS.txt
+
+      - name: Upload Actions artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ThatSkyMod-Android-0.34.5-arm64-v8a
+          path: |
+            dist/ThatSkyMod-Android-arm64-v8a.so
+            dist/SHA256SUMS.txt
+          if-no-files-found: error
+
+      - name: Move v0.34.5 tag to clean master commit
+        if: github.ref == 'refs/heads/master'
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f v0.34.5 "$GITHUB_SHA"
+          git push --force origin refs/tags/v0.34.5
+
+      - name: Publish GitHub Release
+        if: github.ref == 'refs/heads/master'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v0.34.5
+          target_commitish: ${{ github.sha }}
+          name: ThatSkyMod Android 0.34.5
+          make_latest: true
+          fail_on_unmatched_files: true
+          body: |
+            - Updated for Sky 0.34.5.
+            - Restored the Lua command queue on a REMCP/Ghidra-verified LocalAvatarLoco game-thread hook.
+            - Added Canvas `offsetsUrl` support with safe runtime overrides and compiled verified defaults.
+            - Unverified native hooks/patches remain explicitly fail-closed until a 0.34.5 address is independently verified.
+            - Developer: XeTrinityz
+            - Contributors: Catyro, Hinnli
+          files: |
+            dist/ThatSkyMod-Android-arm64-v8a.so
+            dist/SHA256SUMS.txt

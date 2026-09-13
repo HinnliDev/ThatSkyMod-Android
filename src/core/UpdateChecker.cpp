@@ -24,8 +24,8 @@ namespace tsm {
             constexpr size_t MAX_DOWNLOAD_SIZE = 100 * 1024 * 1024;
 
             const char* GITHUB_API_HOST = _O("api.github.com");
-            const char* GITHUB_RELEASES_ENDPOINT = _O("/repos/XeTrinityz/ThatSkyMod-Android/releases/latest");
-            const char* DOWNLOAD_URL = _O("https://github.com/XeTrinityz/ThatSkyMod-Android/releases/latest/download/libTSM.so");
+            const char* GITHUB_RELEASES_ENDPOINT = _O("/repos/HinnliDev/ThatSkyMod-Android/releases/latest");
+            const char* DOWNLOAD_URL = _O("https://github.com/HinnliDev/ThatSkyMod-Android/releases/latest/download/ThatSkyMod-Android-arm64-v8a.so");
             const char* DEFAULT_FILES_DIR = _O("/data/data/git.artdeell.skymodloader/files");
 
             std::mutex g_updateMutex;
@@ -223,7 +223,7 @@ namespace tsm {
                 m_hasUpdate = latestVersion.IsValid() && (latestVersion > m_currentVersion);
             }
 
-            InstallLatest();
+            if (latestVersion.IsValid() && latestVersion > m_currentVersion) InstallLatest();
         }
 
 
@@ -253,14 +253,14 @@ namespace tsm {
         }
 
         Version UpdateChecker::GetCurrentVersionFromConfig() {
-            return Version{ 0, 25, 2 };
+            return Version{ 0, 34, 5 };
         }
 
 
         void UpdateChecker::InstallLatest() {
             {
                 std::lock_guard<std::mutex> lock(g_updateMutex);
-                if (m_installRunning) return;
+                if (m_installRunning || !m_hasUpdate) return;
                 m_installRunning = true;
             }
 

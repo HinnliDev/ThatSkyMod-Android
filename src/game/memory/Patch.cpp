@@ -129,6 +129,7 @@ bool Patch::Restore() {
 
 Patch CreatePatch(void* address, const void* replacement, std::size_t size) {
     Patch patch;
+    if (!address || !replacement || size == 0) return patch;
     patch.address = address;
     patch.original.resize(size);
     patch.modified.resize(size);
@@ -145,6 +146,7 @@ Patch CreatePatchAtRva(std::uintptr_t rva, const void* replacement, std::size_t 
 }
 
 Patch CreateNopPatch(void* address, std::size_t instruction_count) {
+    if (!address || instruction_count == 0) return Patch{};
     const std::size_t size = instruction_count * 4;
     const std::uint32_t nop = 0xD503201F;
 

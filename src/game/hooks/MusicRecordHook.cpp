@@ -68,7 +68,7 @@ bool Install() {
         return false;
     }
 
-    if (!tsm::utils::hooking::install_rva("SharedMemoryPlayPianoSound",
+    if (tsm::game::Offsets::kSharedMemoryPlayPianoSound != 0 && !tsm::utils::hooking::install_rva("SharedMemoryPlayPianoSound",
                                  tsm::game::Offsets::kSharedMemoryPlayPianoSound,
                                  (void*)PlayPianoSound_Hook,
                                  (void**)&s_origPlayPianoSound)) {

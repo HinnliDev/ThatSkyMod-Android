@@ -6,16 +6,19 @@ on:
 jobs:
   notify:
     runs-on: ubuntu-latest
+    env:
+      WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
 
     steps:
       - name: Send clean Discord embed
+        if: env.WEBHOOK != ''
         env:
-          WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
           ACTOR: ${{ github.actor }}
           TIMESTAMP: ${{ github.event.head_commit.timestamp }}
         run: |
-          curl -X POST \
+          set -euo pipefail
+          curl --fail-with-body -X POST \
           -H "Content-Type: application/json" \
           -d "$(jq -n \
             --arg actor "$ACTOR" \
@@ -41,3 +44,7 @@ jobs:
               }]
             }')" \
           "$WEBHOOK"
+
+      - name: Discord webhook not configured
+        if: env.WEBHOOK == ''
+        run: echo "DISCORD_WEBHOOK is not configured; notification skipped."

@@ -99,7 +99,7 @@ bool Install() {
 
     bool allOk = true;
 
-    if (!tsm::utils::hooking::install_rva("SetSession",
+    if (tsm::game::Offsets::kAccountServerSetSession != 0 && !tsm::utils::hooking::install_rva("SetSession",
                                  tsm::game::Offsets::kAccountServerSetSession,
                                  (void*)SetSession_Hook,
                                  (void**)&s_origSetSession)) {
@@ -107,7 +107,7 @@ bool Install() {
         allOk = false;
     }
 
-    if (!tsm::utils::hooking::install_rva("SetUserAgent",
+    if (tsm::game::Offsets::kHttpClientSetUserAgent != 0 && !tsm::utils::hooking::install_rva("SetUserAgent",
                                  tsm::game::Offsets::kHttpClientSetUserAgent,
                                  (void*)SetUserAgent_Hook,
                                  (void**)&s_origSetUserAgent)) {

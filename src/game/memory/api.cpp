@@ -179,7 +179,7 @@ void RefreshAvatarCache() {
 }
 
 [[nodiscard]] bool ShouldDisplay(std::uintptr_t avatar) {
-    if (avatar == 0) return false;
+    if (avatar == 0 || Offsets::kShouldDisplay == 0 || tsm::game::memory::GetBase() == 0) return false;
 
     using ShouldDisplayFunc = bool(*)(std::uintptr_t);
     const std::uintptr_t funcAddr = tsm::game::memory::GetBase() + Offsets::kShouldDisplay;

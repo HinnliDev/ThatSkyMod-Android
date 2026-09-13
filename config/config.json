@@ -1,13 +1,14 @@
 {
     "name": "libTSM.so",
-    "author": "XeTrinityz",
+    "author": "XeTrinityz, Catyro, Hinnli",
     "displayName": "That Sky Mod",
     "description": "https://discord.gg/thatskymod",
     "majorVersion": 0,
-    "minorVersion": 25,
-    "patchVersion": 2,
+    "minorVersion": 34,
+    "patchVersion": 5,
     "displaysUI": true,
     "selfManagedUI": true,
-    "githubReleasesUrl": "https://api.github.com/repos/XeTrinityz/ThatSkyMod-Android/releases/latest",
+    "githubReleasesUrl": "https://api.github.com/repos/HinnliDev/ThatSkyMod-Android/releases/latest",
+    "offsetsUrl": "https://raw.githubusercontent.com/HinnliDev/ThatSkyMod-Android/master/config/offsets.json",
     "dependencies": []
 }

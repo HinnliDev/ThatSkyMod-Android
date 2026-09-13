@@ -56,7 +56,7 @@ bool Install() {
         return false;
     }
 
-    if (!tsm::utils::hooking::install_rva("PlayMusicKey",
+    if (tsm::game::Offsets::kPlayMusicKey != 0 && !tsm::utils::hooking::install_rva("PlayMusicKey",
                                  tsm::game::Offsets::kPlayMusicKey,
                                  (void*)PlayMusicKey_Hook,
                                  (void**)&s_origPlayMusicKey)) {
@@ -83,7 +83,7 @@ void PlayKey(std::int64_t pianoButton) {
 static void StopNote(std::int64_t pianoButton) {
     if (pianoButton == 0) return;
     std::uintptr_t base = tsm::game::memory::GetBase();
-    if (base == 0) return;
+    if (base == 0 || tsm::game::Offsets::kStopNote == 0) return;
     std::uintptr_t gamePtr = tsm::game::memory::ReadU64(tsm::game::Offsets::Game);
     if (gamePtr == 0) return;
     auto stopNoteFn = reinterpret_cast<StopNoteFn>(base + tsm::game::Offsets::kStopNote);

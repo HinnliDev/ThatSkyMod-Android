@@ -2,7 +2,7 @@
 <div align="center">
   <!-- PROJECT LOGO / TITLE -->
   <h1>That Sky Mod (Android)</h1>
-    <img src="https://i.ibb.co/qL5TS2q4/icon.png" alt="TSM Logo" width="80" height="80">
+    <img src="resources/icons/icon.png" alt="TSM Logo" width="80" height="80">
 
   <p align="center">
     An all-in-one mod menu for Sky: Children of the Light
@@ -15,8 +15,8 @@
       <img src="https://img.shields.io/discord/1247220592919314522?color=7289da&logo=discord&logoColor=white&style=for-the-badge" alt="Discord">
     </a>
     <br>
-    <a href="https://github.com/XeTrinityz/ThatSkyMod-Android/releases">
-      <img src="https://img.shields.io/github/downloads/XeTrinityz/ThatSkyMod-Android/total?style=for-the-badge" alt="Downloads">
+    <a href="https://github.com/HinnliDev/ThatSkyMod-Android/releases">
+      <img src="https://img.shields.io/github/downloads/HinnliDev/ThatSkyMod-Android/total?style=for-the-badge" alt="Downloads">
     </a>
   </div>
 
@@ -28,9 +28,9 @@
 
 ## About This Repository
 
-This repository hosts the Android binary (.so) for That Sky Mod (TSM). It is intended for end-users who only need to download updates to the mod.
+This repository hosts the Android binary (.so) and source for That Sky Mod (TSM), with releases maintained for current Sky versions.
 
-- This is a binaries-only repo for releases of the Android module (`libTSM.so`).
+- Android release builds are published for `arm64-v8a`.
 - For help, support, and installation guidance, please visit our Discord.
 
 ## Key Features
@@ -43,34 +43,33 @@ This repository hosts the Android binary (.so) for That Sky Mod (TSM). It is int
 ## Download
 
 - Get the latest Android build here:
-  - https://github.com/XeTrinityz/ThatSkyMod-Android/releases/latest
-- Asset name typically: `libTSM.so`
-- Also included: `Canvas.apk` (recommended for easy setup).
+  - https://github.com/HinnliDev/ThatSkyMod-Android/releases/latest
+- Android arm64-v8a release asset: `ThatSkyMod-Android-arm64-v8a.so`
 - Older versions are available in the Releases page if needed.
 
 ## How to Use (Android)
 
-1. Download `Canvas.apk` and `libTSM.so` from the latest release.
-2. Install Canvas (enable installs from unknown sources if prompted).
-3. Open Canvas → tap **Add Mod** → select `libTSM.so`.
-4. Tap **Live**.
+1. Download `ThatSkyMod-Android-arm64-v8a.so` from the latest release.
+2. Open your compatible Sky mod loader (for example, Canvas).
+3. Choose **Add Mod** and select `ThatSkyMod-Android-arm64-v8a.so`.
+4. Start the modded game session.
 5. Launch Sky: Children of the Light and open the TSM menu in-game.
 
 ## Updating
 
-- Replace your existing `libTSM.so` with the one from the latest release.
+- Download the latest `ThatSkyMod-Android-arm64-v8a.so` and replace/re-import the existing TSM module in your loader.
 - Fully restart the game after updating.
 
 ## Compatibility
 
-- Target platform: **Android**.
-- We aim to support the latest global build of Sky: Children of the Light on Android. Game updates may require a new TSM release.
-- If you encounter issues after a game update, check the Releases page or Discord for status and hotfixes.
+- Current supported game version: **Sky 0.34.5**.
+- Target platform: **Android arm64-v8a**.
+- Game updates may require a new TSM release. If a new Sky version lands, check Releases or Discord before reusing offsets from an older build.
 
 ## Troubleshooting
 
-- **Crashes after update**: Ensure you fully replaced the previous `.so` and that no duplicate copies are being loaded.
-- **Game update broke mod**: Check the latest release notes or Discord for a compatibility update.
+- **Crashes after update**: Ensure the previous TSM binary is not being loaded alongside the new one.
+- **Game update broke mod**: Check the latest release notes or Discord for compatibility status.
 
 ## Support
 
@@ -80,16 +79,14 @@ This repository hosts the Android binary (.so) for That Sky Mod (TSM). It is int
 ## Disclaimer
 
 - That Sky Mod is an unofficial fan-made modification for Sky: Children of the Light.
-
 - This project is not affiliated with, endorsed by, or sponsored by thatgamecompany (TGC) or Sky: Children of the Light.
-
 - Use at your own risk. Users are responsible for complying with the game's Terms of Service and all applicable laws.
-
 - This project does not include or distribute any proprietary game files, assets, or content belonging to thatgamecompany.
 
 ## Credits
 
-- **Developer**: XeTrinityz
+- **Developer: XeTrinityz**
+- **Contributors: Catyro, Hinnli**
 - Maintained by the community
 
 <p align="right"><a href="#readme-top">Back to top</a></p>

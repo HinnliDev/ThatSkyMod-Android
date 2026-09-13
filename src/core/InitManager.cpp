@@ -3,6 +3,7 @@
 #include <game/memory/Address.h>
 #include <game/memory/Memory.h>
 #include <game/memory/offsets.h>
+#include <game/memory/RuntimeOffsets.h>
 #include <game/hooks/HookManager.h>
 #include <game/interop/LuaFunctions.h>
 #include <data/DataManager.h>
@@ -51,8 +52,14 @@ void InitManager::PerformLateInit() {
     if (m_lateInit) return;
 
     tsm::game::memory::InitializeBase();
+    tsm::game::runtime_offsets::LoadCanvasOffsets();
 
-    tsm::game::memory::WriteU32(tsm::game::Offsets::kStarwatchAuth, tsm::game::Signatures::kRetInstruction);
+    if (tsm::game::Offsets::kStarwatchAuth != 0) {
+        tsm::game::memory::WriteU32(tsm::game::Offsets::kStarwatchAuth,
+                                    tsm::game::Signatures::kRetInstruction);
+    } else {
+        tsm::log::w("InitManager: StarwatchAuth patch disabled: no verified 0.34.5 RVA");
+    }
 
     tsm::lua::functions::InitializeCore();
     tsm::lua::functions::InitializeExtended();

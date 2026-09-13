@@ -63,23 +63,33 @@ namespace {
 
 
 std::uint8_t ReadByte(std::uintptr_t rva) {
-    return *reinterpret_cast<std::uint8_t*>(GetBase() + rva);
+    const std::uintptr_t base = GetBase();
+    if (base == 0 || rva == 0) return 0;
+    return *reinterpret_cast<std::uint8_t*>(base + rva);
 }
 
 std::uint32_t ReadU32(std::uintptr_t rva) {
-    return *reinterpret_cast<std::uint32_t*>(GetBase() + rva);
+    const std::uintptr_t base = GetBase();
+    if (base == 0 || rva == 0) return 0;
+    return *reinterpret_cast<std::uint32_t*>(base + rva);
 }
 
 std::uint64_t ReadU64(std::uintptr_t rva) {
-    return *reinterpret_cast<std::uint64_t*>(GetBase() + rva);
+    const std::uintptr_t base = GetBase();
+    if (base == 0 || rva == 0) return 0;
+    return *reinterpret_cast<std::uint64_t*>(base + rva);
 }
 
 float ReadFloat(std::uintptr_t rva) {
-    return *reinterpret_cast<float*>(GetBase() + rva);
+    const std::uintptr_t base = GetBase();
+    if (base == 0 || rva == 0) return 0.0f;
+    return *reinterpret_cast<float*>(base + rva);
 }
 
 double ReadDouble(std::uintptr_t rva) {
-    return *reinterpret_cast<double*>(GetBase() + rva);
+    const std::uintptr_t base = GetBase();
+    if (base == 0 || rva == 0) return 0.0;
+    return *reinterpret_cast<double*>(base + rva);
 }
 
 

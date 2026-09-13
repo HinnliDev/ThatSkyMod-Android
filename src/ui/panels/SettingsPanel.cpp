@@ -1138,6 +1138,7 @@ void DrawSettingsTab()
                 CenterSeparator("Developer");
                 CenteredText("XeTrinityz");
                 CenterSeparator("Contributors");
+                CenteredText("Catyro & Hinnli");
                 CenteredText("Mr Gatto");
                 CenteredText("Vexadros & Gxost");
                 CenteredText("Kiojeen");
@@ -1147,7 +1148,7 @@ void DrawSettingsTab()
                     tsm::lua::helpers::OpenURL("https://discord.gg/kjpGzTU9hH");
                 }
                 if (ButtonCard("GitHub Repository", "Official releases", "GitHub", "OPEN")) {
-                    tsm::lua::helpers::OpenURL("https://github.com/XeTrinityz/ThatSkyMod-Android");
+                    tsm::lua::helpers::OpenURL("https://github.com/HinnliDev/ThatSkyMod-Android");
                 }
 
                 break; }

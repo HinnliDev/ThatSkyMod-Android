@@ -82,22 +82,8 @@ namespace {
     }
 
     void* GetAccountBarn() {
-        if (tsm::game::memory::GetBase() == 0) {
-            tsm::game::memory::InitializeBase();
-        }
-
-        void* audience = tsm::game::mem::read_ptr_rva(tsm::game::Offsets::AudienceBarn);
-        if (!audience) return nullptr;
-
-        std::uintptr_t ptr_addr = tsm::game::mem::add(audience, tsm::game::Offsets::kAccountBarn);
-        void* accountBarn = *reinterpret_cast<void**>(ptr_addr);
-
-        if (!accountBarn) {
-            ptr_addr = tsm::game::mem::add(audience, 0x8);
-            accountBarn = *reinterpret_cast<void**>(ptr_addr);
-        }
-
-        return accountBarn;
+        if (tsm::game::memory::GetBase() == 0) tsm::game::memory::InitializeBase();
+        return tsm::game::mem::read_ptr_rva(tsm::game::Offsets::kSystemAccountsAndroid);
     }
 
     static bool g_fastAccountSwitch = false;

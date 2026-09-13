@@ -31,7 +31,7 @@ bool Install() {
         tsm::log::e("PianoFrameHook: Module base not initialized");
         return false;
     }
-    if (!tsm::utils::hooking::install_rva("PianoFrame",
+    if (tsm::game::Offsets::kPianoFrame != 0 && !tsm::utils::hooking::install_rva("PianoFrame",
                                           tsm::game::Offsets::kPianoFrame,
                                           reinterpret_cast<void*>(PianoFrame_Hook),
                                           reinterpret_cast<void**>(&s_origPianoFrame))) {
